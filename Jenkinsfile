@@ -27,8 +27,7 @@ pipeline {
         } 
         stage('build image') { 
           steps { 
-            sh 'docker build -t lcenguz/campaign-demo:v1 --label campaign
-demo-server .' 
+            sh 'docker build -t lcenguz/campaign-demo:v1 --label campaign-demo-server .' 
           } 
         } 
         stage('run container') { 
