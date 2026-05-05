@@ -1,0 +1,50 @@
+pipeline {
+    agent {
+        node {
+            label 'dockerhost-build-server'
+        }
+    }
+    tools {
+        maven 'maven-3.9.6'
+    }
+    environment {
+        DOCKER_USER = 'lcenguz' 
+        DOCKERHUB_CREDENTIALS = credentials('devops-dockerhub-tkn')
+    }
+    stages {
+        stage('Packaging') {
+            steps {
+                echo 'Packaging..'
+                sh 'mvn clean package'
+            }
+        }
+        stage('Copying jar file') {
+            steps {
+                echo 'Copying jar file..'
+                // Asegúrate de que tu proyecto genera un .jar y no un .war
+                sh 'mv target/*.jar .'
+            }
+        }
+        stage('build image') {
+            steps {
+                sh "docker build -t ${DOCKER_USER}/campaign-demo:v1 --label campaigndemo-server ."
+            }
+        }
+        stage('Docker Hub Login') {
+            steps {
+                // CORREGIDO: Todo en una sola línea
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+            }
+        }
+        stage('Push to Docker Hub') {
+            steps {
+                sh "docker push ${DOCKER_USER}/campaign-demo:v1"
+            }
+        }
+    }
+    post {
+        always {
+            sh 'docker logout'
+        }
+    }
+}
